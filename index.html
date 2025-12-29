@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>物品貸出管理</title>
+
+    <style>
+      body {
+        font-family: sans-serif;
+        background: #ffffff;
+        text-align: center;
+      }
+
+      .screen {
+        display: none;
+      }
+      .screen.active {
+        display: block;
+      }
+
+      h1 {
+        margin-top: 40px;
+      }
+
+      button {
+        font-size: 20px;
+        padding: 20px 30px;
+        margin: 10px;
+        border-radius: 15px;
+        border: 2px solid #000;
+      }
+
+      button.disabled {
+        background: #ccc;
+        color: #888;
+      }
+
+      button.selected {
+        background: #f8bcbc;
+      }
+
+      .pink {
+        background: #f8bcbc;
+      }
+      .blue {
+        background: #bfe4f4;
+      }
+      .yellow {
+        background: #ffe07a;
+      }
+      .green {
+        background: #d9f5cc;
+      }
+
+      .back {
+        position: fixed;
+        left: 30px;
+        bottom: 30px;
+      }
+
+      select,
+      input {
+        font-size: 20px;
+        padding: 10px;
+        width: 300px;
+      }
+
+      table {
+        width: 90%;
+        margin: 20px auto;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid #000;
+        padding: 10px;
+      }
+
+      th {
+        background: #000;
+        color: #fff;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- 画面1 -->
+    <div class="screen active" id="screen1">
+      <h1>貸出物品選択</h1>
+      <button class="pink" onclick="selectItem('卓球ラケット')">
+        卓球ラケット
+      </button>
+      <button class="blue" onclick="selectItem('コントローラー')">
+        コントローラー
+      </button>
+      <button class="yellow" onclick="selectItem('ボドゲ・その他')">
+        ボドゲ・その他</button
+      ><br />
+      <button onclick="showScreen(6)">返却確認</button>
+    </div>
+
+    <!-- 画面2 -->
+    <div class="screen" id="screen2">
+      <h1>卓球ラケット（複数選択可）</h1>
+      <div id="racketArea"></div>
+      <br />
+      <button onclick="confirmRackets()">次へ</button>
+      <button class="back" onclick="showScreen(1)">戻る</button>
+    </div>
+
+    <!-- 画面3 -->
+    <div class="screen" id="screen3">
+      <h1>コントローラー</h1>
+      <div id="controllerArea"></div>
+      <button class="back" onclick="showScreen(1)">戻る</button>
+    </div>
+
+    <!-- 画面4 -->
+    <div class="screen" id="screen4">
+      <h1>ボドゲ・その他</h1>
+      <input list="games" id="gameInput" />
+      <datalist id="games">
+        <option value="トランプ"></option>
+        <option value="UNO"></option>
+        <option value="ジェンガ"></option>
+        <option value="dobble"></option>
+        <option value="将棋"></option>
+        <option value="オセロ"></option></datalist
+      ><br />
+      <button onclick="nextGame()">次へ</button>
+      <button class="back" onclick="showScreen(1)">戻る</button>
+    </div>
+
+    <!-- 画面5 -->
+    <div class="screen" id="screen5">
+      <h1>借りるもの</h1>
+      <div id="confirmText"></div>
+      <h2>登録番号</h2>
+      <input type="number" id="regNumber" /><br />
+      <button class="green" onclick="borrow()">借りる</button>
+      <button class="back" onclick="goBack()">戻る</button>
+    </div>
+
+    <!-- 画面6 -->
+    <div class="screen" id="screen6">
+      <h1>返却確認</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>日時</th>
+            <th>借りたもの</th>
+            <th>登録番号</th>
+            <th>確認者</th>
+          </tr>
+        </thead>
+        <tbody id="history"></tbody>
+      </table>
+      <button class="back" onclick="showScreen(1)">戻る</button>
+    </div>
+
+    <script>
+      let data = JSON.parse(localStorage.getItem("lendData") || "[]");
+      let selected = {};
+      let selectedRackets = [];
+      let previous = 1;
+
+      function showScreen(n) {
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById("screen" + n).classList.add("active");
+        if (n === 6) drawHistory();
+      }
+
+      function selectItem(type) {
+        selected = { type };
+        selectedRackets = [];
+        previous = 1;
+
+        if (type === "卓球ラケット") {
+          createRacketButtons();
+          showScreen(2);
+        } else if (type === "コントローラー") {
+          createButtons(
+            "controllerArea",
+            [1, 2, 3, 4, 5, 6, 7, 8, "ジョイコン"],
+            3
+          );
+        } else {
+          showScreen(4);
+        }
+      }
+
+      function createRacketButtons() {
+        const area = document.getElementById("racketArea");
+        area.innerHTML = "";
+
+        [1, 2, 3, 4].forEach((num) => {
+          const btn = document.createElement("button");
+          btn.textContent = num;
+
+          const inUse = data.some(
+            (d) =>
+              d.type === "卓球ラケット" && d.item == num && d.checker === ""
+          );
+
+          if (inUse) {
+            btn.classList.add("disabled");
+          } else {
+            btn.onclick = () => toggleRacket(num, btn);
+          }
+          area.appendChild(btn);
+        });
+      }
+
+      function toggleRacket(num, btn) {
+        if (selectedRackets.includes(num)) {
+          selectedRackets = selectedRackets.filter((n) => n !== num);
+          btn.classList.remove("selected");
+        } else {
+          selectedRackets.push(num);
+          btn.classList.add("selected");
+        }
+      }
+
+      function confirmRackets() {
+        if (selectedRackets.length === 0) return;
+        selected.items = [...selectedRackets];
+        previous = 2;
+        showConfirm();
+      }
+
+      function createButtons(areaId, list, screenNo) {
+        const area = document.getElementById(areaId);
+        area.innerHTML = "";
+
+        list.forEach((item) => {
+          const btn = document.createElement("button");
+          btn.textContent = item;
+
+          const inUse = data.some(
+            (d) =>
+              d.type === selected.type && d.item == item && d.checker === ""
+          );
+
+          if (inUse) {
+            btn.classList.add("disabled");
+          } else {
+            btn.onclick = () => {
+              selected.items = [item];
+              previous = screenNo;
+              showConfirm();
+            };
+          }
+          area.appendChild(btn);
+        });
+
+        showScreen(screenNo);
+      }
+
+      function nextGame() {
+        const v = document.getElementById("gameInput").value;
+        if (!v) return;
+
+        const inUse = data.some(
+          (d) => d.type === "ボドゲ・その他" && d.item === v && d.checker === ""
+        );
+        if (inUse) return alert("貸出中です");
+
+        selected.type = "ボドゲ・その他";
+        selected.items = [v];
+        previous = 4;
+        showConfirm();
+      }
+
+      function showConfirm() {
+        document.getElementById("confirmText").textContent =
+          selected.type + " / " + selected.items.join(", ");
+        document.getElementById("regNumber").value = "";
+        showScreen(5);
+      }
+
+      function borrow() {
+        const num = document.getElementById("regNumber").value;
+        if (!num) return;
+
+        const now = new Date();
+        const date =
+          now.getFullYear() +
+          "/" +
+          String(now.getMonth() + 1).padStart(2, "0") +
+          "/" +
+          String(now.getDate()).padStart(2, "0") +
+          " " +
+          String(now.getHours()).padStart(2, "0") +
+          ":" +
+          String(now.getMinutes()).padStart(2, "0");
+
+        selected.items.forEach((item) => {
+          data.push({
+            type: selected.type,
+            item: item,
+            date: date,
+            number: num,
+            checker: "",
+          });
+        });
+
+        localStorage.setItem("lendData", JSON.stringify(data));
+        showScreen(1);
+      }
+
+      function goBack() {
+        showScreen(previous);
+      }
+
+      function drawHistory() {
+        const body = document.getElementById("history");
+        body.innerHTML = "";
+
+        data.forEach((d, i) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+      <td>${d.date}</td>
+      <td>${d.type}${d.item}</td>
+      <td>${d.number}</td>
+      <td>
+        <select onchange="returnItem(${i}, this.value)">
+          <option value=""></option>
+          <option value="佐藤">佐藤</option>
+          <option value="高橋">高橋</option>
+        </select>
+      </td>
+    `;
+          tr.querySelector("select").value = d.checker;
+          body.appendChild(tr);
+        });
+      }
+
+      function returnItem(i, name) {
+        data[i].checker = name;
+        localStorage.setItem("lendData", JSON.stringify(data));
+      }
+    </script>
+  </body>
+</html>
