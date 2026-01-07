@@ -2,12 +2,16 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <title>児童館 物品貸出管理</title>
+    <title>物品貸出管理</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+    />
 
     <style>
       body {
-        margin: 0;
-        font-family: sans-serif;
+        font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
+          "Hiragino Sans", Meiryo, sans-serif;
       }
 
       .screen {
@@ -28,15 +32,15 @@
       }
 
       p {
-        margin-top: 50px;
+        margin-top: 30px;
       }
 
       button {
         font-size: 20px;
-        padding: 20px 40px;
+        padding: 20px 30px;
         margin: 10px;
         border-radius: 10px;
-        border: 0 solid #000;
+        border: none;
       }
 
       button.disabled {
@@ -46,10 +50,9 @@
       }
 
       button.selected {
-        background-color: #8fd18f;
+        background: #8fd18f;
       }
 
-      /* メニュー */
       .menu {
         display: flex;
         gap: 40px;
@@ -87,12 +90,15 @@
       .boardgame {
         background-image: url("boardgame.png");
       }
+      .cord {
+        background-image: url("cord.png");
+      }
 
       .select-area {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        max-width: 600px;
+        max-width: 90vw;
       }
 
       input {
@@ -104,12 +110,6 @@
 
       input:focus {
         outline: none;
-        box-shadow: none;
-      }
-
-      input:hover {
-        outline: none;
-        box-shadow: none;
       }
 
       .back {
@@ -137,7 +137,7 @@
   </head>
 
   <body>
-    <!-- 画面1 -->
+    <!-- ホーム -->
     <div class="screen active" id="screen1">
       <h1>貸出物品選択</h1>
       <div class="menu">
@@ -159,6 +159,9 @@
         >
           <span>ボドゲ・その他</span>
         </button>
+        <button class="menu-btn cord" onclick="selectItem('充電器類')">
+          <span>充電器類</span>
+        </button>
       </div>
       <button onclick="showScreen(6)">返却確認</button>
     </div>
@@ -168,7 +171,6 @@
       <h1>卓球ラケット</h1>
       <p>複数選択できます</p>
       <div class="select-area" id="racketArea"></div>
-      <p>登録番号を入力し、借りるボタンを押してください</p>
       <input type="number" id="regNumber2" placeholder="登録番号" />
       <button onclick="borrow()">借りる</button>
       <button class="back" onclick="showScreen(1)">戻る</button>
@@ -177,9 +179,7 @@
     <!-- コントローラー -->
     <div class="screen" id="screen3">
       <h1>コントローラー</h1>
-      <p>1つ選択してください</p>
       <div class="select-area" id="controllerArea"></div>
-      <p>登録番号を入力し、借りるボタンを押してください</p>
       <input type="number" id="regNumber3" placeholder="登録番号" />
       <button onclick="borrow()">借りる</button>
       <button class="back" onclick="showScreen(1)">戻る</button>
@@ -188,8 +188,7 @@
     <!-- ボドゲ -->
     <div class="screen" id="screen4">
       <h1>ボドゲ・その他</h1>
-      <p>ボードゲームの種類を選んでください</p>
-      <input list="games" id="gameInput" placeholder="選択してください" />
+      <input list="games" id="gameInput" />
       <datalist id="games">
         <option value="トランプ"></option>
         <option value="UNO"></option>
@@ -199,9 +198,18 @@
         <option value="オセロ"></option>
       </datalist>
 
-      <p>登録番号を入力し、借りるボタンを押してください</p>
       <input type="number" id="regNumber4" placeholder="登録番号" />
       <button onclick="borrowGame()">借りる</button>
+      <button class="back" onclick="showScreen(1)">戻る</button>
+    </div>
+
+    <!-- 充電器類 -->
+    <div class="screen" id="screen5">
+      <h1>充電器類</h1>
+      <p>複数選択できます</p>
+      <div class="select-area" id="chargerArea"></div>
+      <input type="number" id="regNumber5" placeholder="登録番号" />
+      <button onclick="borrow()">借りる</button>
       <button class="back" onclick="showScreen(1)">戻る</button>
     </div>
 
@@ -214,7 +222,7 @@
             <th>日時</th>
             <th>物品</th>
             <th>登録番号</th>
-            <th>確認者</th>
+            <th>確認</th>
           </tr>
         </thead>
         <tbody id="history"></tbody>
@@ -237,38 +245,46 @@
       function selectItem(type) {
         selected = { type, items: [] };
         if (type === "卓球ラケット") {
-          createRackets();
+          createMulti("racketArea", "卓球ラケット", [1, 2, 3, 4]);
           showScreen(2);
         } else if (type === "コントローラー") {
-          createControllers();
+          createSingle();
           showScreen(3);
-        } else {
+        } else if (type === "ボドゲ・その他") {
           showScreen(4);
+        } else {
+          createMulti("chargerArea", "充電器類", chargerList);
+          showScreen(5);
         }
       }
 
-      function createRackets() {
-        const area = document.getElementById("racketArea");
+      function createMulti(areaId, type, list) {
+        const area = document.getElementById(areaId);
         area.innerHTML = "";
-        [1, 2, 3, 4].forEach((n) => {
+        list.forEach((item) => {
           const inUse = data.some(
-            (d) => d.type === "卓球ラケット" && d.item == n && d.checker === ""
+            (d) => d.type === type && d.item === item && d.checker === ""
           );
           const b = document.createElement("button");
-          b.textContent = n;
+          b.textContent = item;
           if (inUse) {
             b.classList.add("disabled");
           } else {
             b.onclick = () => {
-              selected.items = [n];
-              b.classList.add("selected");
+              if (selected.items.includes(item)) {
+                selected.items = selected.items.filter((i) => i !== item);
+                b.classList.remove("selected");
+              } else {
+                selected.items.push(item);
+                b.classList.add("selected");
+              }
             };
           }
           area.appendChild(b);
         });
       }
 
-      function createControllers() {
+      function createSingle() {
         const area = document.getElementById("controllerArea");
         area.innerHTML = "";
         [1, 2, 3, 4, 5, 6, 7, 8, "ジョイコン"].forEach((n) => {
@@ -293,18 +309,44 @@
         });
       }
 
-      function borrow() {
-        const active = document.querySelector(".screen.active");
-        const input = active.querySelector("input[type='number']");
-        const num = input.value;
-        if (!num || selected.items.length === 0) return;
+      const chargerList = [
+        "延長コード1",
+        "延長コード2",
+        "延長コード3",
+        "延長コード4",
+        "延長コード5",
+        "延長コード6",
+        "延長コード7",
+        "延長コード8",
+        "延長コード9",
+        "充電器1",
+        "充電器2",
+        "充電器3",
+        "充電器4",
+        "充電器5",
+        "充電器6",
+        "充電器7",
+        "充電器8",
+        "充電器9",
+        "充電器10",
+        "充電コード1",
+        "充電コード2",
+        "充電コード3",
+        "充電コード4",
+        "充電コード5",
+        "充電コード6",
+        "充電コード7",
+        "充電コード8",
+        "充電コード9",
+        "充電コード10",
+        "充電コード11",
+        "充電コード12",
+      ];
 
+      function borrow() {
+        const num = document.querySelector(".screen.active input").value;
+        if (!num || selected.items.length === 0) return;
         selected.items.forEach((item) => {
-          const inUse = data.some(
-            (d) =>
-              d.type === selected.type && d.item == item && d.checker === ""
-          );
-          if (inUse) return alert("貸出中です");
           data.push({
             type: selected.type,
             item,
@@ -313,22 +355,14 @@
             checker: "",
           });
         });
-
         localStorage.setItem("lendData", JSON.stringify(data));
         showScreen(1);
       }
 
       function borrowGame() {
-        const name = document.getElementById("gameInput").value;
-        const num = document.getElementById("regNumber4").value;
+        const name = gameInput.value;
+        const num = regNumber4.value;
         if (!name || !num) return;
-
-        const inUse = data.some(
-          (d) =>
-            d.type === "ボドゲ・その他" && d.item === name && d.checker === ""
-        );
-        if (inUse) return alert("貸出中です");
-
         data.push({
           type: "ボドゲ・その他",
           item: name,
@@ -344,19 +378,20 @@
         const body = document.getElementById("history");
         body.innerHTML = "";
         [...data].reverse().forEach((d, i) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${d.date}</td>
-            <td>${d.type}${d.item}</td>
-            <td>${d.number}</td>
-            <td>
-              <select onchange="data[${i}].checker=this.value;localStorage.setItem('lendData',JSON.stringify(data))">
-                <option value=""></option>
-                <option value="確認">確認</option>
-              </select>
-            </td>`;
-          tr.querySelector("select").value = d.checker;
-          body.appendChild(tr);
+          body.innerHTML += `
+            <tr>
+              <td>${d.date}</td>
+              <td>${d.type}${d.item}</td>
+              <td>${d.number}</td>
+              <td>
+                <select onchange="data[${
+                  data.length - 1 - i
+                }].checker=this.value;localStorage.setItem('lendData',JSON.stringify(data))">
+                  <option value=""></option>
+                  <option value="確認">確認</option>
+                </select>
+              </td>
+            </tr>`;
         });
       }
     </script>
