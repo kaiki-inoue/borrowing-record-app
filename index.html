@@ -3,396 +3,658 @@
   <head>
     <meta charset="UTF-8" />
     <title>物品貸出管理</title>
+
+    <!-- ブラウザ間の見た目を統一する -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
     />
 
+    <!-- 外部サイトのアイコンを利用する -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <!-- 見た目の設定（プログラミング言語：CSS） -->
     <style>
+      /* ===== 全体 ===== */
+      :root {
+        --color-primary: #4ea72e;
+        --color-red: #cd383a;
+        --bg-main: #efefef;
+        --shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
       body {
-        font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN",
-          "Hiragino Sans", Meiryo, sans-serif;
+        margin: 0;
+        font-family: sans-serif;
+        background: var(--bg-main);
       }
 
       .screen {
         display: none;
-        height: 100vh;
-        width: 100vw;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
+        min-height: 100vh;
+        padding: 24px 24px 180px;
+        box-sizing: border-box;
+      }
+      .screen.active {
+        display: block;
       }
 
-      .screen.active {
+      /* ===== タイトルと説明 ===== */
+      h1,
+      p {
         display: flex;
+        justify-content: center;
+        text-align: center;
       }
 
       h1 {
-        margin: 30px;
+        margin: 1rem 0;
+        letter-spacing: 0.1em;
+        font-size: 28px;
       }
 
       p {
-        margin-top: 30px;
+        margin: 0 0 3rem 0;
+        color: #333;
       }
 
+      /* ===== ボタン共通 ===== */
       button {
-        font-size: 20px;
-        padding: 20px 30px;
-        margin: 10px;
-        border-radius: 10px;
+        font-size: 18px;
+        padding: 14px 20px;
+        border-radius: 999px;
         border: none;
-      }
-
-      button.disabled {
-        background: #ccc;
-        color: #888;
-        pointer-events: none;
+        background: #fff;
+        box-shadow: var(--shadow);
+        cursor: pointer;
       }
 
       button.selected {
-        background: #8fd18f;
+        background: var(--color-primary);
+        color: #fff;
+        box-shadow: none;
       }
 
-      .menu {
-        display: flex;
-        gap: 40px;
+      button.disabled {
+        background: #aeaeae;
+        color: #747474;
+        box-shadow: none;
+        pointer-events: none;
       }
 
-      .menu-btn {
-        width: 260px;
-        height: 260px;
-        position: relative;
-        font-size: 24px;
-        font-weight: bold;
-        background-size: cover;
-        background-position: center;
+      /* ===== 入力欄 ===== */
+      input:not([type="checkbox"]) {
+        font-size: 18px;
+        width: 15rem;
+        padding: 14px;
+        border-radius: 5px;
+        border: none;
+        box-shadow: var(--shadow);
+        text-align: center;
       }
 
-      .menu-btn::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 10px;
-      }
-
-      .menu-btn span {
-        position: relative;
-        z-index: 1;
-      }
-
-      .tabletennis {
-        background-image: url("tabletennis.png");
-      }
-      .controller {
-        background-image: url("controller.png");
-      }
-      .boardgame {
-        background-image: url("boardgame.png");
-      }
-      .cord {
-        background-image: url("cord.png");
-      }
-
-      .select-area {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        max-width: 90vw;
-      }
-
-      input {
-        font-size: 22px;
-        padding: 10px;
-        margin: 10px;
-        width: 300px;
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
       }
 
       input:focus {
         outline: none;
       }
 
-      .back {
+      /* ===== 戻るボタン ===== */
+      .back-btn {
         position: fixed;
-        left: 30px;
-        bottom: 30px;
+        top: 1rem;
+        left: 1rem;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: #fff;
+        color: #444;
+        box-shadow: var(--shadow);
+        font-size: 1.5rem;
+        z-index: 2;
       }
 
+      /* ===== ホーム画面 ===== */
+      .menu {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin: 5rem 0;
+      }
+
+      .menu-btn {
+        width: 200px;
+        height: 200px;
+        border-radius: 1rem;
+        font-size: 22px;
+        font-weight: bold;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .menu-btn img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.35;
+      }
+
+      .menu-btn span {
+        position: relative;
+        z-index: 1;
+        text-shadow: 0 0 10px #fff;
+      }
+
+      nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 3;
+      }
+
+      .history-btn {
+        width: 100%;
+        padding: 20px;
+        background: #d9d9d9;
+        color: #404040;
+        font-size: 20px;
+        letter-spacing: 0.1em;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      /* ===== 番号選択エリア ===== */
+      .select-area {
+        display: grid;
+        grid-template-columns: 1fr 5fr;
+        gap: 2rem 2rem;
+        position: relative;
+      }
+
+      .select-area .label {
+        text-align: right;
+        font-weight: bold;
+        margin-top: 16px;
+      }
+
+      .select-area .button-area {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      input.other-game {
+        margin: 2rem auto 0 auto;
+        display: block;
+      }
+
+      /* ===== 登録番号入力欄と借りるボタン ===== */
+      .bottom-fixed {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 1rem;
+        background: var(--bg-main);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .borrow-btn {
+        background: var(--color-primary);
+        color: #fff;
+        border-radius: 5px;
+        min-width: 10rem;
+      }
+
+      /* ===== 貸出履歴 ===== */
       table {
-        width: 90%;
+        width: 100%;
         border-collapse: collapse;
+        background: #fff;
       }
 
       th,
       td {
-        border: 1px solid #000;
+        border: 1px solid #404040;
         padding: 10px;
+        text-align: center;
       }
 
       th {
-        background: #000;
+        background: #404040;
         color: #fff;
+      }
+
+      .all-delete-btn {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: var(--color-red);
+        color: #fff;
+        box-shadow: var(--shadow);
+        font-size: 1.2rem;
+        z-index: 2;
+      }
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        accent-color: var(--color-primary);
+        vertical-align: middle;
+      }
+
+      td > i {
+        width: 1rem;
+        height: 1rem;
+        cursor: pointer;
+        color: #404040;
       }
     </style>
   </head>
 
+  <!-- 構造の設定（プログラミング言語：HTML） -->
   <body>
     <!-- ホーム -->
-    <div class="screen active" id="screen1">
+    <div class="screen active" id="home">
       <h1>貸出物品選択</h1>
+
       <div class="menu">
-        <button
-          class="menu-btn tabletennis"
-          onclick="selectItem('卓球ラケット')"
-        >
-          <span>卓球ラケット</span>
+        <button class="menu-btn" onclick="selectItem('卓球ラケット')">
+          <img src="tabletennis.png" /><span>卓球ラケット</span>
         </button>
-        <button
-          class="menu-btn controller"
-          onclick="selectItem('コントローラー')"
-        >
-          <span>コントローラー</span>
+        <button class="menu-btn" onclick="selectItem('コントローラー')">
+          <img src="controller.png" /><span>コントローラー</span>
         </button>
-        <button
-          class="menu-btn boardgame"
-          onclick="selectItem('ボドゲ・その他')"
-        >
-          <span>ボドゲ・その他</span>
+        <button class="menu-btn" onclick="selectItem('ボドゲ・その他')">
+          <img src="boardgame.png" /><span>ボドゲ・その他</span>
         </button>
-        <button class="menu-btn cord" onclick="selectItem('充電器類')">
-          <span>充電器類</span>
+        <button class="menu-btn" onclick="selectItem('充電器類')">
+          <img src="cord.png" /><span>充電器類</span>
         </button>
       </div>
-      <button onclick="showScreen(6)">返却確認</button>
+
+      <nav>
+        <button class="history-btn" onclick="showScreen('history')">
+          貸出履歴
+        </button>
+      </nav>
     </div>
 
-    <!-- 卓球 -->
-    <div class="screen" id="screen2">
+    <!-- 卓球ラケット -->
+    <div class="screen" id="racket">
+      <button class="back-btn" onclick="showScreen('home')">
+        <i class="fa-solid fa-angle-left"></i>
+      </button>
       <h1>卓球ラケット</h1>
-      <p>複数選択できます</p>
-      <div class="select-area" id="racketArea"></div>
-      <input type="number" id="regNumber2" placeholder="登録番号" />
-      <button onclick="borrow()">借りる</button>
-      <button class="back" onclick="showScreen(1)">戻る</button>
+      <p>番号を選択してください（複数選択可）</p>
+
+      <div class="select-area">
+        <div class="label">卓球ラケット</div>
+        <div class="button-area" id="racketArea"></div>
+      </div>
+
+      <div class="bottom-fixed">
+        <input type="number" id="regRacket" placeholder="登録番号を入力" />
+        <button class="borrow-btn" onclick="borrow()">借りる</button>
+      </div>
     </div>
 
     <!-- コントローラー -->
-    <div class="screen" id="screen3">
+    <div class="screen" id="controller">
+      <button class="back-btn" onclick="showScreen('home')">
+        <i class="fa-solid fa-angle-left"></i>
+      </button>
       <h1>コントローラー</h1>
-      <div class="select-area" id="controllerArea"></div>
-      <input type="number" id="regNumber3" placeholder="登録番号" />
-      <button onclick="borrow()">借りる</button>
-      <button class="back" onclick="showScreen(1)">戻る</button>
+      <p>番号を選択してください</p>
+
+      <div class="select-area">
+        <div class="label">コントローラー</div>
+        <div class="button-area" id="controllerArea"></div>
+
+        <div class="label">ジョイコン</div>
+        <div class="button-area" id="joyconArea"></div>
+      </div>
+
+      <div class="bottom-fixed">
+        <input type="number" id="regController" placeholder="登録番号を入力" />
+        <button class="borrow-btn" onclick="borrow()">借りる</button>
+      </div>
     </div>
 
     <!-- ボドゲ -->
-    <div class="screen" id="screen4">
+    <div class="screen" id="boardgame">
+      <button class="back-btn" onclick="showScreen('home')">
+        <i class="fa-solid fa-angle-left"></i>
+      </button>
       <h1>ボドゲ・その他</h1>
-      <input list="games" id="gameInput" />
-      <datalist id="games">
-        <option value="トランプ"></option>
-        <option value="UNO"></option>
-        <option value="ジェンガ"></option>
-        <option value="dobble"></option>
-        <option value="将棋"></option>
-        <option value="オセロ"></option>
-      </datalist>
+      <p>ゲームを選択、または直接入力してください</p>
 
-      <input type="number" id="regNumber4" placeholder="登録番号" />
-      <button onclick="borrowGame()">借りる</button>
-      <button class="back" onclick="showScreen(1)">戻る</button>
+      <div class="select-area">
+        <div class="label">ゲーム</div>
+        <div class="button-area" id="boardgameArea"></div>
+      </div>
+      <input
+        class="other-game"
+        type="text"
+        id="freeGame"
+        placeholder="ゲームを直接入力"
+      />
+
+      <div class="bottom-fixed">
+        <input type="number" id="regBoard" placeholder="登録番号を入力" />
+        <button class="borrow-btn" onclick="borrowGame()">借りる</button>
+      </div>
     </div>
 
-    <!-- 充電器類 -->
-    <div class="screen" id="screen5">
+    <!-- 充電器 -->
+    <div class="screen" id="charger">
+      <button class="back-btn" onclick="showScreen('home')">
+        <i class="fa-solid fa-angle-left"></i>
+      </button>
       <h1>充電器類</h1>
-      <p>複数選択できます</p>
-      <div class="select-area" id="chargerArea"></div>
-      <input type="number" id="regNumber5" placeholder="登録番号" />
-      <button onclick="borrow()">借りる</button>
-      <button class="back" onclick="showScreen(1)">戻る</button>
+      <p>番号を選択してください（複数選択可）</p>
+
+      <div class="select-area">
+        <div class="label">充電器</div>
+        <div class="button-area" id="chargerUnit"></div>
+
+        <div class="label">充電コード</div>
+        <div class="button-area" id="chargerCable"></div>
+
+        <div class="label">延長コード</div>
+        <div class="button-area" id="extensionCable"></div>
+      </div>
+
+      <div class="bottom-fixed">
+        <input type="number" id="regCharger" placeholder="登録番号を入力" />
+        <button class="borrow-btn" onclick="borrow()">借りる</button>
+      </div>
     </div>
 
-    <!-- 返却 -->
-    <div class="screen" id="screen6">
-      <h1>返却確認</h1>
+    <!-- 貸出履歴 -->
+    <div class="screen" id="history">
+      <button class="back-btn" onclick="showScreen('home')">
+        <i class="fa-solid fa-angle-left"></i>
+      </button>
+      <button class="all-delete-btn" onclick="deleteAllHistory()">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+
+      <h1>貸出履歴</h1>
+
       <table>
         <thead>
           <tr>
-            <th>日時</th>
-            <th>物品</th>
+            <th>借りた日時</th>
+            <th>借りた物品</th>
             <th>登録番号</th>
-            <th>確認</th>
+            <th>返却確認</th>
+            <th>削除</th>
           </tr>
         </thead>
-        <tbody id="history"></tbody>
+        <tbody id="historyBody"></tbody>
       </table>
-      <button class="back" onclick="showScreen(1)">戻る</button>
     </div>
 
+    <!-- 動きの設定（プログラミング言語：JavaScript） -->
     <script>
       let data = JSON.parse(localStorage.getItem("lendData") || "[]");
       let selected = { type: "", items: [] };
 
-      function showScreen(n) {
+      function showScreen(id) {
+        // 入力欄を全部クリア
+        document
+          .querySelectorAll('.screen input:not([type="checkbox"])')
+          .forEach((input) => (input.value = ""));
+
+        // 画面切り替え
         document
           .querySelectorAll(".screen")
           .forEach((s) => s.classList.remove("active"));
-        document.getElementById("screen" + n).classList.add("active");
-        if (n === 6) drawHistory();
+        document.getElementById(id).classList.add("active");
+
+        if (id === "history") drawHistory();
       }
 
       function selectItem(type) {
         selected = { type, items: [] };
         if (type === "卓球ラケット") {
-          createMulti("racketArea", "卓球ラケット", [1, 2, 3, 4]);
-          showScreen(2);
+          createMulti("racketArea", type, "卓球ラケット", [1, 2, 3, 4]);
+          showScreen("racket");
         } else if (type === "コントローラー") {
-          createSingle();
-          showScreen(3);
+          createController();
+          showScreen("controller");
         } else if (type === "ボドゲ・その他") {
-          showScreen(4);
+          createBoardgames();
+          showScreen("boardgame");
         } else {
-          createMulti("chargerArea", "充電器類", chargerList);
-          showScreen(5);
+          createChargers();
+          showScreen("charger");
         }
       }
 
-      function createMulti(areaId, type, list) {
+      function createMulti(areaId, type, label, list) {
         const area = document.getElementById(areaId);
         area.innerHTML = "";
-        list.forEach((item) => {
+
+        list.forEach((n) => {
+          const fullItem = `${label}${n}`;
+
           const inUse = data.some(
-            (d) => d.type === type && d.item === item && d.checker === ""
+            (d) => d.type === type && d.item === fullItem && !d.checker
           );
+
           const b = document.createElement("button");
-          b.textContent = item;
+          b.textContent = n;
+
           if (inUse) {
             b.classList.add("disabled");
           } else {
+            b.onclick = () => toggleSelect(b, fullItem);
+          }
+
+          area.appendChild(b);
+        });
+      }
+
+      function toggleSelect(btn, item) {
+        if (selected.items.includes(item)) {
+          selected.items = selected.items.filter((i) => i !== item);
+          btn.classList.remove("selected");
+        } else {
+          selected.items.push(item);
+          btn.classList.add("selected");
+        }
+      }
+
+      function createController() {
+        controllerArea.innerHTML = joyconArea.innerHTML = "";
+        [...Array(8)].forEach((_, i) =>
+          addSingle(controllerArea, "コントローラー", i + 1)
+        );
+        [...Array(1)].forEach((_, i) =>
+          addSingle(joyconArea, "ジョイコン", i + 1)
+        );
+      }
+
+      function addSingle(area, label, item) {
+        const fullItem = `${label}${item}`;
+        const inUse = data.some(
+          (d) =>
+            d.type === "コントローラー" && d.item === fullItem && !d.checker
+        );
+        const b = document.createElement("button");
+        b.textContent = item;
+        if (inUse) b.classList.add("disabled");
+        else
+          b.onclick = () => {
+            document
+              .querySelectorAll("#controllerArea button,#joyconArea button")
+              .forEach((btn) => btn.classList.remove("selected"));
+            selected.items = [`${label}${item}`];
+            b.classList.add("selected");
+          };
+        area.appendChild(b);
+      }
+
+      function createBoardgames() {
+        const list = [
+          "トランプ",
+          "UNO",
+          "ジェンガ",
+          "dobble",
+          "将棋",
+          "オセロ",
+        ];
+        boardgameArea.innerHTML = "";
+        list.forEach((name) => {
+          const inUse = data.some(
+            (d) => d.type === "ボドゲ・その他" && d.item === name && !d.checker
+          );
+          const b = document.createElement("button");
+          b.textContent = name;
+          if (inUse) b.classList.add("disabled");
+          else
             b.onclick = () => {
-              if (selected.items.includes(item)) {
-                selected.items = selected.items.filter((i) => i !== item);
+              if (selected.items[0] === name) {
+                selected.items = [];
                 b.classList.remove("selected");
               } else {
-                selected.items.push(item);
+                document
+                  .querySelectorAll("#boardgameArea button")
+                  .forEach((btn) => btn.classList.remove("selected"));
+                selected.items = [name];
                 b.classList.add("selected");
               }
             };
-          }
-          area.appendChild(b);
+          boardgameArea.appendChild(b);
         });
       }
 
-      function createSingle() {
-        const area = document.getElementById("controllerArea");
-        area.innerHTML = "";
-        [1, 2, 3, 4, 5, 6, 7, 8, "ジョイコン"].forEach((n) => {
-          const inUse = data.some(
-            (d) =>
-              d.type === "コントローラー" && d.item == n && d.checker === ""
-          );
-          const b = document.createElement("button");
-          b.textContent = n;
-          if (inUse) {
-            b.classList.add("disabled");
-          } else {
-            b.onclick = () => {
-              document
-                .querySelectorAll("#controllerArea button")
-                .forEach((btn) => btn.classList.remove("selected"));
-              b.classList.add("selected");
-              selected.items = [n];
-            };
-          }
-          area.appendChild(b);
-        });
+      function createChargers() {
+        createMulti(
+          "chargerUnit",
+          "充電器類",
+          "充電器",
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        );
+        createMulti(
+          "chargerCable",
+          "充電器類",
+          "充電コード",
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        );
+        createMulti(
+          "extensionCable",
+          "充電器類",
+          "延長コード",
+          [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        );
       }
-
-      const chargerList = [
-        "延長コード1",
-        "延長コード2",
-        "延長コード3",
-        "延長コード4",
-        "延長コード5",
-        "延長コード6",
-        "延長コード7",
-        "延長コード8",
-        "延長コード9",
-        "充電器1",
-        "充電器2",
-        "充電器3",
-        "充電器4",
-        "充電器5",
-        "充電器6",
-        "充電器7",
-        "充電器8",
-        "充電器9",
-        "充電器10",
-        "充電コード1",
-        "充電コード2",
-        "充電コード3",
-        "充電コード4",
-        "充電コード5",
-        "充電コード6",
-        "充電コード7",
-        "充電コード8",
-        "充電コード9",
-        "充電コード10",
-        "充電コード11",
-        "充電コード12",
-      ];
 
       function borrow() {
         const num = document.querySelector(".screen.active input").value;
-        if (!num || selected.items.length === 0) return;
+        if (!num || !selected.items.length) return;
         selected.items.forEach((item) => {
           data.push({
             type: selected.type,
             item,
             number: num,
             date: new Date().toLocaleString(),
-            checker: "",
+            checker: false,
           });
         });
         localStorage.setItem("lendData", JSON.stringify(data));
-        showScreen(1);
+        showScreen("home");
       }
 
       function borrowGame() {
-        const name = gameInput.value;
-        const num = regNumber4.value;
+        const name = freeGame.value || selected.items[0];
+        const num = regBoard.value;
         if (!name || !num) return;
         data.push({
           type: "ボドゲ・その他",
           item: name,
           number: num,
           date: new Date().toLocaleString(),
-          checker: "",
+          checker: false,
         });
         localStorage.setItem("lendData", JSON.stringify(data));
-        showScreen(1);
+        showScreen("home");
       }
 
       function drawHistory() {
-        const body = document.getElementById("history");
-        body.innerHTML = "";
+        historyBody.innerHTML = "";
         [...data].reverse().forEach((d, i) => {
-          body.innerHTML += `
-            <tr>
-              <td>${d.date}</td>
-              <td>${d.type}${d.item}</td>
-              <td>${d.number}</td>
-              <td>
-                <select onchange="data[${
-                  data.length - 1 - i
-                }].checker=this.value;localStorage.setItem('lendData',JSON.stringify(data))">
-                  <option value=""></option>
-                  <option value="確認">確認</option>
-                </select>
-              </td>
-            </tr>`;
+          historyBody.innerHTML += `
+          <tr>
+            <td>${d.date}</td>
+            <td>${d.item}</td>
+            <td>${d.number}</td>
+            <td>
+              <input
+                type="checkbox"
+                ${d.checker === true ? "checked" : ""}
+                onchange="toggleCheck(${data.length - 1 - i}, this.checked)"
+              />
+            </td>
+            <td>
+              <i
+                class="fa-solid fa-trash"
+                onclick="deleteRow(${i})"
+              ></i>
+            </td>
+          </tr>`;
         });
+      }
+
+      function toggleCheck(index, checked) {
+        data[index].checker = checked;
+        localStorage.setItem("lendData", JSON.stringify(data));
+      }
+
+      function deleteAllHistory() {
+        if (!confirm("貸出履歴をすべて削除しますか？")) return;
+
+        data = [];
+        localStorage.removeItem("lendData");
+        drawHistory();
+      }
+
+      function deleteRow(index) {
+        if (!confirm("この履歴を削除しますか？")) return;
+
+        data.splice(index, 1);
+        localStorage.setItem("lendData", JSON.stringify(data));
+        drawHistory();
       }
     </script>
   </body>
