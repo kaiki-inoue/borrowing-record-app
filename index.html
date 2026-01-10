@@ -26,10 +26,6 @@
         --shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
       }
 
-      * {
-        -webkit-tap-highlight-color: transparent;
-      }
-
       body {
         margin: 0;
         font-family: sans-serif;
@@ -61,8 +57,14 @@
       }
 
       p {
-        margin: 0 0 3rem 0;
+        margin-bottom: 3rem;
         color: #333;
+      }
+
+      @media (max-width: 920px) {
+        p {
+          margin-bottom: 1.5rem;
+        }
       }
 
       /* ===== ボタン共通 ===== */
@@ -73,6 +75,7 @@
         border: none;
         background: #fff;
         box-shadow: var(--shadow);
+        color: #000;
         cursor: pointer;
       }
 
@@ -137,6 +140,12 @@
         flex-wrap: wrap;
         gap: 1.5rem;
         margin: 5rem 0;
+      }
+
+      @media (max-width: 920px) {
+        .menu {
+          margin: 2rem;
+        }
       }
 
       .menu-btn {
