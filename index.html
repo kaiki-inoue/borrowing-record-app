@@ -194,6 +194,27 @@
         box-shadow: none;
       }
 
+      .toasts {
+        position: fixed;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        z-index: 4;
+      }
+
+      .toast {
+        background-color: #fff;
+        color: var(--color-primary);
+        font-weight: bold;
+        box-shadow: var(--shadow);
+        border-radius: 5px;
+        padding: 1rem 2rem;
+        margin: 0.5rem;
+      }
+
       /* ===== 番号選択エリア ===== */
       .select-area {
         display: grid;
@@ -316,6 +337,8 @@
           <img src="cord.png" /><span>充電器類</span>
         </button>
       </div>
+
+      <div class="toasts" id="toasts"></div>
 
       <nav>
         <button class="history-btn" onclick="showScreen('history')">
@@ -607,6 +630,7 @@
             date: new Date().toLocaleString(),
             checker: false,
           });
+          createToast(`${item}を借りました`);
         });
         localStorage.setItem("lendData", JSON.stringify(data));
         showScreen("home");
@@ -623,6 +647,7 @@
           date: new Date().toLocaleString(),
           checker: false,
         });
+        createToast(`${name}を借りました`);
         localStorage.setItem("lendData", JSON.stringify(data));
         showScreen("home");
       }
@@ -671,6 +696,18 @@
         data.splice(index, 1);
         localStorage.setItem("lendData", JSON.stringify(data));
         drawHistory();
+      }
+
+      function createToast(message) {
+        const toasts = document.getElementById("toasts");
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.innerText = message;
+        toasts.appendChild(toast);
+
+        setTimeout(() => {
+          toast.remove();
+        }, 5000);
       }
     </script>
   </body>
