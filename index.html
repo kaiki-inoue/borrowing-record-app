@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -212,7 +212,7 @@
         box-shadow: var(--shadow);
         border-radius: 5px;
         padding: 1rem 2rem;
-        margin: 0.5rem;
+        margin-bottom: 0.5rem;
       }
 
       /* ===== 番号選択エリア ===== */
@@ -508,7 +508,7 @@
           const fullItem = `${label}${n}`;
 
           const inUse = data.some(
-            (d) => d.type === type && d.item === fullItem && !d.checker
+            (d) => d.type === type && d.item === fullItem && !d.checker,
           );
 
           const b = document.createElement("button");
@@ -537,10 +537,10 @@
       function createController() {
         controllerArea.innerHTML = joyconArea.innerHTML = "";
         [...Array(8)].forEach((_, i) =>
-          addSingle(controllerArea, "コントローラー", i + 1)
+          addSingle(controllerArea, "コントローラー", i + 1),
         );
         [...Array(1)].forEach((_, i) =>
-          addSingle(joyconArea, "ジョイコン", i + 1)
+          addSingle(joyconArea, "ジョイコン", i + 1),
         );
       }
 
@@ -548,7 +548,7 @@
         const fullItem = `${label}${item}`;
         const inUse = data.some(
           (d) =>
-            d.type === "コントローラー" && d.item === fullItem && !d.checker
+            d.type === "コントローラー" && d.item === fullItem && !d.checker,
         );
         const b = document.createElement("button");
         b.textContent = item;
@@ -576,7 +576,7 @@
         boardgameArea.innerHTML = "";
         list.forEach((name) => {
           const inUse = data.some(
-            (d) => d.type === "ボドゲ・その他" && d.item === name && !d.checker
+            (d) => d.type === "ボドゲ・その他" && d.item === name && !d.checker,
           );
           const b = document.createElement("button");
           b.textContent = name;
@@ -603,19 +603,19 @@
           "chargerUnit",
           "充電器類",
           "充電器",
-          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         );
         createMulti(
           "chargerCable",
           "充電器類",
           "充電コード",
-          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
         );
         createMulti(
           "extensionCable",
           "充電器類",
           "延長コード",
-          [1, 2, 3, 4, 5, 6, 7, 8, 9]
+          [1, 2, 3, 4, 5, 6, 7, 8, 9],
         );
       }
 
@@ -655,6 +655,8 @@
       function drawHistory() {
         historyBody.innerHTML = "";
         [...data].reverse().forEach((d, i) => {
+          const originalIndex = data.length - 1 - i;
+
           historyBody.innerHTML += `
           <tr>
             <td>${d.date}</td>
@@ -664,13 +666,13 @@
               <input
                 type="checkbox"
                 ${d.checker === true ? "checked" : ""}
-                onchange="toggleCheck(${data.length - 1 - i}, this.checked)"
+                onchange="toggleCheck(${originalIndex}, this.checked)"
               />
             </td>
             <td>
               <i
                 class="fa-solid fa-trash"
-                onclick="deleteRow(${i})"
+                onclick="deleteRow(${originalIndex})"
               ></i>
             </td>
           </tr>`;
