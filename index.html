@@ -564,6 +564,7 @@
         area.appendChild(b);
       }
 
+      // ゲームの種類を増やす場合は、以下の配列内に名前を追加
       function createBoardgames() {
         const list = [
           "トランプ",
@@ -630,6 +631,12 @@
             date: new Date().toLocaleString(),
             checker: false,
           });
+
+          // 300件を超えたら、最も古いデータを削除
+          if (data.length > 300) {
+            data.shift();
+          }
+
           createToast(`${item}を借りました`);
         });
         localStorage.setItem("lendData", JSON.stringify(data));
@@ -647,6 +654,12 @@
           date: new Date().toLocaleString(),
           checker: false,
         });
+
+        // 300件を超えたら、最も古いデータを削除
+        if (data.length > 300) {
+          data.shift();
+        }
+
         createToast(`${name}を借りました`);
         localStorage.setItem("lendData", JSON.stringify(data));
         showScreen("home");
