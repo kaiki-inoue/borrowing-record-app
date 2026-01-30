@@ -136,17 +136,23 @@
 
       /* ===== ホーム画面 ===== */
       .menu {
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: repeat(1, 200px);
         justify-content: center;
-        flex-wrap: wrap;
         gap: 1.5rem;
         margin: 5rem 0;
       }
 
-      @media (max-width: 920px) {
+      @media (min-width: 450px) {
         .menu {
-          margin: 2rem;
+          grid-template-columns: repeat(2, 200px);
+        }
+      }
+
+      @media (min-width: 920px) {
+        .menu {
+          grid-template-columns: repeat(4, 200px);
+          margin: 5rem 0;
         }
       }
 
@@ -256,6 +262,12 @@
         gap: 1rem;
       }
 
+      .bottom-fixed > p {
+        margin: 0;
+        color: var(--color-red);
+        font-weight: bold;
+      }
+
       .borrow-btn {
         background: var(--color-primary);
         color: #fff;
@@ -361,6 +373,7 @@
       </div>
 
       <div class="bottom-fixed">
+        <p>※未登録の方は「0000」を入力してください</p>
         <input type="number" id="regRacket" placeholder="登録番号を入力" />
         <button class="borrow-btn" onclick="borrow()">借りる</button>
       </div>
@@ -375,6 +388,9 @@
       <p>番号を選択してください</p>
 
       <div class="select-area">
+        <div class="label">Switch</div>
+        <div class="button-area" id="switchArea"></div>
+
         <div class="label">コントローラー</div>
         <div class="button-area" id="controllerArea"></div>
 
@@ -383,6 +399,7 @@
       </div>
 
       <div class="bottom-fixed">
+        <p>※未登録の方は「0000」を入力してください</p>
         <input type="number" id="regController" placeholder="登録番号を入力" />
         <button class="borrow-btn" onclick="borrow()">借りる</button>
       </div>
@@ -408,6 +425,7 @@
       />
 
       <div class="bottom-fixed">
+        <p>※未登録の方は「0000」を入力してください</p>
         <input type="number" id="regBoard" placeholder="登録番号を入力" />
         <button class="borrow-btn" onclick="borrowGame()">借りる</button>
       </div>
@@ -433,6 +451,7 @@
       </div>
 
       <div class="bottom-fixed">
+        <p>※未登録の方は「0000」を入力してください</p>
         <input type="number" id="regCharger" placeholder="登録番号を入力" />
         <button class="borrow-btn" onclick="borrow()">借りる</button>
       </div>
@@ -535,7 +554,11 @@
       }
 
       function createController() {
-        controllerArea.innerHTML = joyconArea.innerHTML = "";
+        switchArea.innerHTML =
+          controllerArea.innerHTML =
+          joyconArea.innerHTML =
+            ""; // 画面を表示するたびにボタンの表示をリセットする
+        [...Array(2)].forEach((_, i) => addSingle(switchArea, "Switch", i + 1));
         [...Array(8)].forEach((_, i) =>
           addSingle(controllerArea, "コントローラー", i + 1),
         );
@@ -556,7 +579,9 @@
         else
           b.onclick = () => {
             document
-              .querySelectorAll("#controllerArea button,#joyconArea button")
+              .querySelectorAll(
+                "#switchArea button,#controllerArea button,#joyconArea button",
+              )
               .forEach((btn) => btn.classList.remove("selected"));
             selected.items = [`${label}${item}`];
             b.classList.add("selected");
